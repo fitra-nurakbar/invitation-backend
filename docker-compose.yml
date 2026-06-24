@@ -1,0 +1,63 @@
+version: '1.1'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invitation-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=development
+      - PORT=8080
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRED_HOURS=${JWT_EXPIRED_HOURS}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - REDIS_URL=redis://redis:6379
+      - XENDIT_SECRET_KEY=${XENDIT_SECRET_KEY}
+      - XENDIT_WEBHOOK_TOKEN=${XENDIT_WEBHOOK_TOKEN}
+      - XENDIT_SUCCESS_URL=${XENDIT_SUCCESS_URL}
+      - XENDIT_FAILURE_URL=${XENDIT_FAILURE_URL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_EMAIL=${SMTP_EMAIL}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_SENDER_NAME=${SMTP_SENDER_NAME}
+      - MAGIC_LINK_BASE_URL=${MAGIC_LINK_BASE_URL}
+      - MAGIC_LINK_EXPIRED_MINUTES=${MAGIC_LINK_EXPIRED_MINUTES}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URL=${GOOGLE_REDIRECT_URL}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - invitation-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: invitation-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - invitation-network
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  invitation-network:
+    driver: bridge

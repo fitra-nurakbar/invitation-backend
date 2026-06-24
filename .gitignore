@@ -1,0 +1,77 @@
+# ─── Environment ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Go ──────────────────────────────────────────────────────
+# Binary
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+invitation-app
+
+# Test binary
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Dependency cache
+vendor/
+
+# ─── Docker ──────────────────────────────────────────────────
+# Override files
+docker-compose.override.yml
+
+# ─── Secrets ─────────────────────────────────────────────────
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+ssl/
+
+# ─── IDE ─────────────────────────────────────────────────────
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains (GoLand)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ─── OS ──────────────────────────────────────────────────────
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+
+# ─── Logs ────────────────────────────────────────────────────
+*.log
+logs/
+tmp/
+
+# ─── Build ───────────────────────────────────────────────────
+dist/
+build/
+bin/
+
+# ─── Nginx ───────────────────────────────────────────────────
+nginx/ssl/
+nginx/logs/

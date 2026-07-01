@@ -46,7 +46,12 @@ func main() {
 	config.RunMigrations()
 	config.ConnectDatabase()
 
+	
 	if len(os.Args) > 1 && os.Args[1] == "--seed" {
+		if err := seeders.ResetDatabase(config.DB);err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Reset database selesai")
 		seeders.Run(config.DB)
 		fmt.Println("🎉 Seeding selesai.")
 		return

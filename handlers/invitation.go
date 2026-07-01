@@ -38,6 +38,45 @@ func GetInvitationBySlug(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": invitation})
 }
 
+// GET /invitations/me — list undangan milik user yang login
+func GetMyInvitations(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	var invitations []models.Invitation
+	config.DB.
+		Preload("User").
+		Preload("Template").
+		Where("user_id = ?", userID).
+		Find(&invitations)
+
+	c.JSON(http.StatusOK, gin.H{"data": invitations})
+}
+
+// GET /invitations/me/:id — detail satu undangan milik user
+func GetMyInvitation(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
+		return
+	}
+
+	var invitation models.Invitation
+	result := config.DB.
+		Preload("Template").
+		Preload("Messages").
+		Where("id = ? AND user_id = ?", id, userID).
+		First(&invitation)
+
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": invitation})
+}
+
 // POST /invitations
 func CreateInvitation(c *gin.Context) {
 	var input struct {
@@ -123,17 +162,29 @@ func UpdateInvitation(c *gin.Context) {
 }
 
 // DELETE /invitations/:id
+// DELETE /invitations/delete/:id
 func DeleteInvitation(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
 		return
 	}
 
-	result := config.DB.Delete(&models.Invitation{}, "id = ?", id)
-	if result.RowsAffected == 0 {
+	// Pastikan undangan milik user yang login
+	var invitation models.Invitation
+	result := config.DB.Where("id = ? AND user_id = ?", id, userID).First(&invitation)
+	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
 		return
 	}
+
+	// Hapus messages dulu sebelum hapus invitation
+	config.DB.Where("invitation_id = ?", id).Delete(&models.Message{})
+
+	// Baru hapus invitation
+	config.DB.Delete(&invitation)
+
 	c.JSON(http.StatusOK, gin.H{"message": "Undangan berhasil dihapus"})
 }

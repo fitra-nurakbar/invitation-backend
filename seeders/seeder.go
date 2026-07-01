@@ -13,10 +13,37 @@ import (
 	"gorm.io/gorm"
 )
 
+func ResetDatabase(db *gorm.DB) error {
+	// Hapus semua tabel
+	err := db.Migrator().DropTable(
+		&models.Message{},      // FK -> Invitation
+		&models.Invitation{},   // FK -> User, Template
+		&models.UserTemplate{}, // FK -> User, Template
+		&models.Order{},        // FK -> User
+		&models.Template{},
+		&models.User{},
+	)
+	if err != nil {
+		return err
+	}
+
+	// Buat ulang tabel
+	err = db.AutoMigrate(
+		&models.User{},
+		&models.Template{},
+		&models.Order{},
+		&models.UserTemplate{},
+		&models.Invitation{},
+		&models.Message{},
+	)
+
+	return err
+}
+
 func Run(db *gorm.DB) {
 	fmt.Println("🌱 Menjalankan seeder...")
 
-	seedAdminUser(db)   // ← admin dulu sebelum user biasa
+	seedAdminUser(db) // ← admin dulu sebelum user biasa
 	seedTemplates(db)
 	seedUsers(db)
 	seedInvitations(db)
@@ -43,7 +70,7 @@ func seedAdminUser(db *gorm.DB) {
 	pwd := string(hashedPassword) // ← buat variable dulu
 	admin := models.User{
 		ID:        adminID,
-		Email:     "admin@invitation.com",
+		Email:     "bisniskeluargaofficial@gmail.com",
 		Name:      "Super Admin",
 		Password:  &pwd, // ← pointer
 		Role:      models.RoleAdmin,
@@ -65,6 +92,7 @@ func seedTemplates(db *gorm.DB) {
 	templates := []models.Template{
 		{
 			ID:                uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+			Slug:              "elegant-rose",
 			Name:              "Elegant Rose",
 			Price:             150000,
 			IsActive:          true,
@@ -73,6 +101,7 @@ func seedTemplates(db *gorm.DB) {
 		},
 		{
 			ID:                uuid.MustParse("00000000-0000-0000-0000-000000000002"),
+			Slug:              "modern-minimalist",
 			Name:              "Modern Minimalist",
 			Price:             100000,
 			IsActive:          true,
@@ -81,6 +110,7 @@ func seedTemplates(db *gorm.DB) {
 		},
 		{
 			ID:                uuid.MustParse("00000000-0000-0000-0000-000000000003"),
+			Slug:              "rustic-garden",
 			Name:              "Rustic Garden",
 			Price:             200000,
 			IsActive:          true,
@@ -89,6 +119,7 @@ func seedTemplates(db *gorm.DB) {
 		},
 		{
 			ID:                uuid.MustParse("00000000-0000-0000-0000-000000000004"),
+			Slug:              "royal-gold",
 			Name:              "Royal Gold",
 			Price:             250000,
 			IsActive:          true,
@@ -97,6 +128,7 @@ func seedTemplates(db *gorm.DB) {
 		},
 		{
 			ID:                uuid.MustParse("00000000-0000-0000-0000-000000000005"),
+			Slug:              "simple-free",
 			Name:              "Simple Free",
 			Price:             0,
 			IsActive:          true,
@@ -120,21 +152,21 @@ func seedUsers(db *gorm.DB) {
 	users := []models.User{
 		{
 			ID:        uuid.MustParse("00000000-0000-0000-0001-000000000002"),
-			Email:     "budi.santoso@gmail.com",
+			Email:     "fitra0612@gmail.com",
 			Name:      "Budi Santoso",
 			Role:      models.RoleUser,
 			CreatedAt: time.Now(),
 		},
 		{
 			ID:        uuid.MustParse("00000000-0000-0000-0001-000000000003"),
-			Email:     "siti.rahayu@gmail.com",
+			Email:     "jamalgolden203@gmail.com",
 			Name:      "Siti Rahayu",
 			Role:      models.RoleUser,
 			CreatedAt: time.Now(),
 		},
 		{
 			ID:        uuid.MustParse("00000000-0000-0000-0001-000000000004"),
-			Email:     "ahmad.fauzi@gmail.com",
+			Email:     "gangsterhitam38@gmail.com",
 			Name:      "Ahmad Fauzi",
 			Role:      models.RoleUser,
 			CreatedAt: time.Now(),

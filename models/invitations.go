@@ -23,6 +23,8 @@ type Invitation struct {
     Status     InvitationStatus `gorm:"type:text;default:'draft'" json:"status"`
     ExpiresAt  time.Time        `gorm:"type:timestamptz" json:"expires_at"`
     Detail     datatypes.JSON   `gorm:"type:jsonb" json:"detail"`
+    CreatedAt      time.Time   `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
+	UpdatedAt      time.Time   `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 
     // Relations
     User     User     `gorm:"foreignKey:UserID" json:"user,omitempty"`

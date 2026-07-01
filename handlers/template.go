@@ -9,10 +9,18 @@ import (
 	"github.com/google/uuid"
 )
 
+// GET /templates/public
+func GetPublicTemplates(c *gin.Context) {
+	var templates []models.Template
+	config.DB.Where("is_active = ?", true).
+		Order("price asc").
+		Find(&templates)
+	c.JSON(http.StatusOK, gin.H{"data": templates})
+}
+
 // GET /templates
 func GetTemplates(c *gin.Context) {
 	var templates []models.Template
-	config.DB.Where("is_active = ?", true).Find(&templates)
 	c.JSON(http.StatusOK, gin.H{"data": templates})
 }
 

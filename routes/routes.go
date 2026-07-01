@@ -40,6 +40,8 @@ func SetupRoutes(r *gin.Engine) {
 	public := api.Group("")
 	public.Use(middleware.APIRateLimit())
 	{
+		public.GET("/templates/public", handlers.GetPublicTemplates)
+		public.GET("/templates/public/:id", handlers.GetTemplate)
 		public.GET("/invitations/:slug", handlers.GetInvitationBySlug)
 		public.GET("/invitations/:slug/messages", handlers.GetMessages)
 		public.POST("/invitations/:slug/messages",
@@ -59,16 +61,17 @@ func SetupRoutes(r *gin.Engine) {
 
 		protected.GET("/users/:id", handlers.GetUser)
 		protected.PUT("/users/:id", handlers.UpdateUser)
-
+		protected.GET("/invitations/me", handlers.GetMyInvitations)
+		protected.GET("/invitations/me/:id", handlers.GetMyInvitation)
 		protected.POST("/invitations", handlers.CreateInvitation)
-		protected.PUT("/invitations/:id", handlers.UpdateInvitation)
-		protected.DELETE("/invitations/:id", handlers.DeleteInvitation)
+		protected.PUT("/invitations/me/:id", handlers.UpdateInvitation)
+		protected.DELETE("/invitations/me/:id", handlers.DeleteInvitation)
 
 		protected.POST("/orders", handlers.CreateOrder)
 		protected.GET("/orders", handlers.GetOrders)
 		protected.GET("/orders/:id", handlers.GetOrder)
 		protected.POST("/orders/:id/cancel", handlers.CancelOrder)
-		protected.GET("/my-templates", handlers.GetMyTemplates)
+		protected.GET("/templates/me", handlers.GetMyTemplates)
 	}
 
 	// ─── ADMIN ONLY ───────────────────────────────────────────
@@ -77,7 +80,7 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		// Auth admin
 		admin.POST("/auth/create", handlers.CreateAdmin)
-		admin.POST("/auth/change-password", handlers.ChangePassword)
+		admin.POST("/auth/change/password", handlers.ChangePassword)
 
 		// Users
 		admin.GET("/users", handlers.GetUsers)
@@ -92,6 +95,9 @@ func SetupRoutes(r *gin.Engine) {
 
 		// Invitations
 		admin.GET("/invitations", handlers.GetInvitations)
+
+		// Messages
+		admin.GET("/messages", handlers.GetAllMessages)
 		admin.DELETE("/messages/:id", handlers.DeleteMessage)
 
 		// Orders

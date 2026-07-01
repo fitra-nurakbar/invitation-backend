@@ -61,6 +61,11 @@ func CreateMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": message})
 }
 
+func GetAllMessages(c *gin.Context) {
+	var messages []models.Message
+	c.JSON(http.StatusOK, gin.H{"data": messages})
+}
+
 // DELETE /messages/:id
 func DeleteMessage(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))

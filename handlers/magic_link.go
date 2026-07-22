@@ -33,7 +33,7 @@ func RequestMagicLink(c *gin.Context) {
 	if exists := config.RedisClient.Exists(context.Background(), cooldownKey).Val(); exists > 0 {
 		ttl := config.RedisClient.TTL(context.Background(), cooldownKey).Val()
 		c.JSON(http.StatusTooManyRequests, gin.H{
-			"error":      "Mohon tunggu sebelum request link baru",
+			"error":       "Mohon tunggu sebelum request link baru",
 			"retry_after": int(ttl.Seconds()),
 		})
 		return

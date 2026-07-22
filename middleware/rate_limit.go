@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ulule/limiter/v3"
-	libredis "github.com/ulule/limiter/v3/drivers/store/redis"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
+	libredis "github.com/ulule/limiter/v3/drivers/store/redis"
 )
 
 // Cache limiter supaya tidak dibuat ulang tiap request
@@ -25,8 +25,8 @@ func newStore() limiter.Store {
 		store, err := libredis.NewStoreWithOptions(
 			config.RedisClient,
 			limiter.StoreOptions{
-				Prefix:          "invitation_rl",  // prefix key di Redis
-				MaxRetry:        3,                // retry jika Redis timeout
+				Prefix:          "invitation_rl", // prefix key di Redis
+				MaxRetry:        3,               // retry jika Redis timeout
 				CleanUpInterval: 5 * time.Minute, // bersihkan key expired
 			},
 		)

@@ -63,6 +63,11 @@ func CreateMessage(c *gin.Context) {
 
 func GetAllMessages(c *gin.Context) {
 	var messages []models.Message
+	result := config.DB.Find(&messages)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"data": messages})
 }
 

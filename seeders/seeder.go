@@ -188,57 +188,148 @@ func seedUsers(db *gorm.DB) {
 // ─── INVITATIONS ─────────────────────────────────────────────
 func seedInvitations(db *gorm.DB) {
 	detailBudi, _ := json.Marshal(map[string]interface{}{
-		"bride":          "Ani Lestari",
-		"groom":          "Budi Santoso",
-		"venue":          "Gedung Serbaguna Merdeka, Jakarta",
-		"venue_maps_url": "https://maps.google.com/?q=-6.2,106.8",
-		"akad": map[string]string{
-			"time":  "08:00 WIB",
-			"place": "Masjid Al-Ikhlas Jakarta",
+		"bride": map[string]string{
+			"name":          "Ani Lestari",
+			"place_of_birth": "Jakarta, 15 Februari 1998",
+			"parent":        "Putri dari Bapak Hendra & Ibu Wati",
 		},
-		"resepsi": map[string]string{
-			"time":  "11:00 WIB",
-			"place": "Gedung Serbaguna Merdeka",
+		"groom": map[string]string{
+			"name":          "Budi Santoso",
+			"place_of_birth": "Bogor, 20 Januari 1996",
+			"parent":        "Putra dari Bapak Slamet & Ibu Ningsih",
 		},
-		"bride_parents": "Bapak Hendra & Ibu Wati",
-		"groom_parents": "Bapak Slamet & Ibu Ningsih",
-		"music":         "Sempurna - Andra and The Backbone",
+		"quotes": map[string]string{
+			"quote":       "Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.",
+			"attribution": "(QS. Ar-Rum: 21)",
+		},
+		"wedding_event": []map[string]string{
+			{
+				"name":     "akad",
+				"date":     "Kamis, 25 Desember 2025",
+				"time":     "08:00 - 10:00 WIB",
+				"place":    "Masjid Al-Ikhlas",
+				"address":  "Jl. Merdeka No. 1, Jakarta Pusat",
+				"maps_url": "https://maps.google.com/?q=-6.2,106.8",
+			},
+			{
+				"name":     "resepsi",
+				"date":     "Kamis, 25 Desember 2025",
+				"time":     "11:00 - 14:00 WIB",
+				"place":    "Gedung Serbaguna Merdeka",
+				"address":  "Jl. Merdeka No. 1, Jakarta Pusat",
+				"maps_url": "https://maps.google.com/?q=-6.2,106.8",
+			},
+		},
+		"streaming_platform": "https://instagram.com/budiani_wedding",
+		"gallery":            map[string]interface{}{},
+		"love_story":         map[string]interface{}{},
+		"wedding_gift": []map[string]string{
+			{
+				"platform": "bca",
+				"name":     "Budi Santoso",
+				"id":       "1234567890",
+			},
+			{
+				"platform": "gopay",
+				"name":     "Budi Santoso",
+				"id":       "08123456789",
+			},
+		},
 	})
 
 	detailSiti, _ := json.Marshal(map[string]interface{}{
-		"bride":          "Siti Rahayu",
-		"groom":          "Rizky Pratama",
-		"venue":          "Villa Bukit Indah, Bogor",
-		"venue_maps_url": "https://maps.google.com/?q=-6.5,106.8",
-		"akad": map[string]string{
-			"time":  "09:00 WIB",
-			"place": "Rumah Mempelai Wanita",
+		"bride": map[string]string{
+			"name":          "Siti Rahayu",
+			"place_of_birth": "Bogor, 10 Maret 1999",
+			"parent":        "Putri dari Bapak Suparman & Ibu Surati",
 		},
-		"resepsi": map[string]string{
-			"time":  "12:00 WIB",
-			"place": "Villa Bukit Indah",
+		"groom": map[string]string{
+			"name":          "Rizky Pratama",
+			"place_of_birth": "Bandung, 5 Juli 1997",
+			"parent":        "Putra dari Bapak Darmawan & Ibu Yuli",
 		},
-		"bride_parents": "Bapak Suparman & Ibu Surati",
-		"groom_parents": "Bapak Darmawan & Ibu Yuli",
-		"music":         "Untuk Selamanya - Sheila on 7",
+		"quotes": map[string]string{
+			"quote":       "Maka nikmat Tuhanmu yang manakah yang kamu dustakan?",
+			"attribution": "(QS. Ar-Rahman: 13)",
+		},
+		"wedding_event": []map[string]string{
+			{
+				"name":     "akad",
+				"date":     "Sabtu, 14 Februari 2026",
+				"time":     "09:00 - 11:00 WIB",
+				"place":    "Rumah Mempelai Wanita",
+				"address":  "Jl. Bukit Indah No. 5, Bogor",
+				"maps_url": "https://maps.google.com/?q=-6.5,106.8",
+			},
+			{
+				"name":     "resepsi",
+				"date":     "Sabtu, 14 Februari 2026",
+				"time":     "12:00 - 15:00 WIB",
+				"place":    "Villa Bukit Indah",
+				"address":  "Jl. Bukit Indah No. 10, Bogor",
+				"maps_url": "https://maps.google.com/?q=-6.5,106.8",
+			},
+		},
+		"streaming_platform": "https://youtube.com/@sitirizkywedding",
+		"gallery":            map[string]interface{}{},
+		"love_story":         map[string]interface{}{},
+		"wedding_gift": []map[string]string{
+			{
+				"platform": "bni",
+				"name":     "Siti Rahayu",
+				"id":       "0987654321",
+			},
+		},
 	})
 
 	detailAhmad, _ := json.Marshal(map[string]interface{}{
-		"bride":          "Dewi Anggraini",
-		"groom":          "Ahmad Fauzi",
-		"venue":          "Hotel Bintang Lima, Bandung",
-		"venue_maps_url": "https://maps.google.com/?q=-6.9,107.6",
-		"akad": map[string]string{
-			"time":  "07:30 WIB",
-			"place": "Masjid Agung Bandung",
+		"bride": map[string]string{
+			"name":          "Dewi Anggraini",
+			"place_of_birth": "Bandung, 3 Agustus 2000",
+			"parent":        "Putri dari Bapak Wahyu & Ibu Endah",
 		},
-		"resepsi": map[string]string{
-			"time":  "10:00 WIB",
-			"place": "Hotel Bintang Lima Bandung",
+		"groom": map[string]string{
+			"name":          "Ahmad Fauzi",
+			"place_of_birth": "Surabaya, 17 November 1997",
+			"parent":        "Putra dari Bapak Ridwan & Ibu Fatimah",
 		},
-		"bride_parents": "Bapak Wahyu & Ibu Endah",
-		"groom_parents": "Bapak Ridwan & Ibu Fatimah",
-		"music":         "Cinta Sejati - Bunga Citra Lestari",
+		"quotes": map[string]string{
+			"quote":       "Wahai manusia! Sungguh, Kami telah menciptakan kamu dari seorang laki-laki dan seorang perempuan, kemudian Kami jadikan kamu berbangsa-bangsa dan bersuku-suku agar kamu saling mengenal.",
+			"attribution": "(QS. Al-Hujurat: 13)",
+		},
+		"wedding_event": []map[string]string{
+			{
+				"name":     "akad",
+				"date":     "Minggu, 8 Maret 2026",
+				"time":     "07:30 - 09:00 WIB",
+				"place":    "Masjid Agung Bandung",
+				"address":  "Jl. Asia Afrika, Bandung",
+				"maps_url": "https://maps.google.com/?q=-6.9,107.6",
+			},
+			{
+				"name":     "resepsi",
+				"date":     "Minggu, 8 Maret 2026",
+				"time":     "10:00 - 13:00 WIB",
+				"place":    "Hotel Bintang Lima Bandung",
+				"address":  "Jl. Braga No. 8, Bandung",
+				"maps_url": "https://maps.google.com/?q=-6.9,107.6",
+			},
+		},
+		"streaming_platform": "",
+		"gallery":            map[string]interface{}{},
+		"love_story":         map[string]interface{}{},
+		"wedding_gift": []map[string]string{
+			{
+				"platform": "mandiri",
+				"name":     "Ahmad Fauzi",
+				"id":       "1122334455",
+			},
+			{
+				"platform": "bri",
+				"name":     "Dewi Anggraini",
+				"id":       "5544332211",
+			},
+		},
 	})
 
 	invitations := []models.Invitation{
@@ -275,7 +366,16 @@ func seedInvitations(db *gorm.DB) {
 	}
 
 	for _, inv := range invitations {
-		result := db.Where("id = ?", inv.ID).FirstOrCreate(&inv)
+		// Cek apakah sudah ada
+		var existing models.Invitation
+		if db.Where("id = ?", inv.ID).First(&existing).Error == nil {
+			// Update detail dengan struktur baru
+			db.Model(&existing).Update("detail", inv.Detail)
+			fmt.Println("  🔄 Updated invitation:", inv.Slug)
+			continue
+		}
+
+		result := db.Create(&inv)
 		if result.Error != nil {
 			log.Println("❌ Error seed invitation:", result.Error)
 		} else {

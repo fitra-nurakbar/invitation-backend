@@ -21,6 +21,11 @@ func GetPublicTemplates(c *gin.Context) {
 // GET /templates
 func GetTemplates(c *gin.Context) {
 	var templates []models.Template
+	result := config.DB.Find(&templates)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"data": templates})
 }
 

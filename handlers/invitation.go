@@ -12,47 +12,32 @@ import (
 	"gorm.io/datatypes"
 )
 
-// GET /invitations
+// GET /admin/invitations
 func GetInvitations(c *gin.Context) {
 	var invitations []models.Invitation
-	config.DB.Preload("User").Preload("Template").Find(&invitations)
+	config.DB.
+		Preload("User").
+		Preload("Template").
+		Order("created_at DESC").
+		Find(&invitations)
 	c.JSON(http.StatusOK, gin.H{"data": invitations})
 }
 
-// GET /invitations/:slug
-func GetInvitationBySlug(c *gin.Context) {
-	slug := c.Param("slug")
-
-	var invitation models.Invitation
-	result := config.DB.
-		Preload("User").
-		Preload("Template").
-		Preload("Messages").
-		Where("slug = ?", slug).
-		First(&invitation)
-
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": invitation})
-}
-
-// GET /invitations/me — list undangan milik user yang login
+// GET /invitations/my
 func GetMyInvitations(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
 	var invitations []models.Invitation
 	config.DB.
-		Preload("User").
 		Preload("Template").
 		Where("user_id = ?", userID).
+		Order("created_at DESC").
 		Find(&invitations)
 
 	c.JSON(http.StatusOK, gin.H{"data": invitations})
 }
 
-// GET /invitations/me/:id — detail satu undangan milik user
+// GET /invitations/my/:id
 func GetMyInvitation(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
@@ -77,14 +62,34 @@ func GetMyInvitation(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": invitation})
 }
 
+// GET /invitations/:slug — publik
+func GetInvitationBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+
+	var invitation models.Invitation
+	result := config.DB.
+		Preload("Template").
+		Preload("Messages").
+		Where("slug = ?", slug).
+		First(&invitation)
+
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": invitation})
+}
+
 // POST /invitations
 func CreateInvitation(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
 	var input struct {
-		UserID     string                 `json:"user_id" binding:"required"`
-		TemplateID string                 `json:"template_id" binding:"required"`
-		Slug       string                 `json:"slug" binding:"required"`
-		EventDate  string                 `json:"event_date" binding:"required"` // format: 2006-01-02
-		Detail     map[string]interface{} `json:"detail"`
+		TemplateID string                     `json:"template_id" binding:"required"`
+		Slug       string                     `json:"slug" binding:"required"`
+		EventDate  string                     `json:"event_date" binding:"required"`
+		Detail     models.InvitationDetailInput `json:"detail"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -92,17 +97,63 @@ func CreateInvitation(c *gin.Context) {
 		return
 	}
 
-	userID, _ := uuid.Parse(input.UserID)
-	templateID, _ := uuid.Parse(input.TemplateID)
-	eventDate, _ := time.Parse("2006-01-02", input.EventDate)
+	templateID, err := uuid.Parse(input.TemplateID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "template_id tidak valid"})
+		return
+	}
+
+	eventDate, err := time.Parse("2006-01-02", input.EventDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "format event_date tidak valid, gunakan YYYY-MM-DD"})
+		return
+	}
+
+	// Validasi field wajib
+	if input.Detail.Groom.Name == "" || input.Detail.Bride.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nama mempelai pria dan wanita wajib diisi"})
+		return
+	}
+
+	if len(input.Detail.WeddingEvent) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Minimal satu acara pernikahan wajib diisi"})
+		return
+	}
+
+	// Cek slug belum dipakai
+	var existing models.Invitation
+	if result := config.DB.Where("slug = ?", input.Slug).First(&existing); result.Error == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Slug sudah digunakan, pilih slug lain"})
+		return
+	}
+
+	// Cek user punya akses template
+	var userTemplate models.UserTemplate
+	if result := config.DB.Where(
+		"user_id = ? AND template_id = ?",
+		userID, templateID,
+	).First(&userTemplate); result.Error != nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Kamu belum memiliki template ini, silakan beli terlebih dahulu",
+		})
+		return
+	}
 
 	// Ambil template untuk hitung expires_at
 	var template models.Template
-	config.DB.First(&template, "id = ?", templateID)
+	if result := config.DB.First(&template, "id = ? AND is_active = true", templateID); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Template tidak ditemukan atau tidak aktif"})
+		return
+	}
+
 	expiresAt := eventDate.AddDate(0, 0, template.ActiveDaysAfter)
 
-	// Convert detail map ke jsonb
-	detailJSON, _ := json.Marshal(input.Detail)
+	// Convert detail ke JSON
+	detailJSON, err := json.Marshal(input.Detail)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses detail undangan"})
+		return
+	}
 
 	invitation := models.Invitation{
 		ID:         uuid.New(),
@@ -115,53 +166,20 @@ func CreateInvitation(c *gin.Context) {
 		Detail:     datatypes.JSON(detailJSON),
 	}
 
-	result := config.DB.Create(&invitation)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+	if err := config.DB.Create(&invitation).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat undangan"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"data": invitation})
+
+	// Preload template untuk response
+	config.DB.Preload("Template").First(&invitation, "id = ?", invitation.ID)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Undangan berhasil dibuat",
+		"data":    invitation,
+	})
 }
 
-// PUT /invitations/:id
-func UpdateInvitation(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
-		return
-	}
-
-	var invitation models.Invitation
-	if result := config.DB.First(&invitation, "id = ?", id); result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
-		return
-	}
-
-	var input struct {
-		Status    string                 `json:"status"`
-		EventDate string                 `json:"event_date"`
-		Detail    map[string]interface{} `json:"detail"`
-	}
-	c.ShouldBindJSON(&input)
-
-	updates := map[string]interface{}{}
-	if input.Status != "" {
-		updates["status"] = input.Status
-	}
-	if input.EventDate != "" {
-		eventDate, _ := time.Parse("2006-01-02", input.EventDate)
-		updates["event_date"] = eventDate
-	}
-	if input.Detail != nil {
-		detailJSON, _ := json.Marshal(input.Detail)
-		updates["detail"] = datatypes.JSON(detailJSON)
-	}
-
-	config.DB.Model(&invitation).Updates(updates)
-	c.JSON(http.StatusOK, gin.H{"data": invitation})
-}
-
-// DELETE /invitations/:id
 // DELETE /invitations/delete/:id
 func DeleteInvitation(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
@@ -172,19 +190,15 @@ func DeleteInvitation(c *gin.Context) {
 		return
 	}
 
-	// Pastikan undangan milik user yang login
-	var invitation models.Invitation
-	result := config.DB.Where("id = ? AND user_id = ?", id, userID).First(&invitation)
-	if result.Error != nil {
+	// Hapus messages dulu
+	config.DB.Where("invitation_id = ?", id).Delete(&models.Message{})
+
+	// Hapus invitation milik user
+	result := config.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Invitation{})
+	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
 		return
 	}
-
-	// Hapus messages dulu sebelum hapus invitation
-	config.DB.Where("invitation_id = ?", id).Delete(&models.Message{})
-
-	// Baru hapus invitation
-	config.DB.Delete(&invitation)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Undangan berhasil dihapus"})
 }

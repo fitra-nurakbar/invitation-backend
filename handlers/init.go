@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	_xenditOnce          sync.Once
-	_emailOnce           sync.Once
-	_templateAccessOnce  sync.Once
+	_xenditOnce         sync.Once
+	_emailOnce          sync.Once
+	_templateAccessOnce sync.Once
 
 	_xenditService         *services.XenditService
 	_emailService          *services.EmailService

@@ -40,18 +40,18 @@ Backend REST API untuk aplikasi undangan digital multi-domain, dibangun dengan G
 
 ## 🛠 Teknologi
 
-| Kategori | Teknologi |
-|---|---|
-| Language | Go 1.25+ |
-| Framework | Gin |
-| Database | Supabase (PostgreSQL) |
-| ORM | GORM |
-| Cache | Redis |
-| Migration | golang-migrate |
-| Auth | JWT, Magic Link, Google OAuth 2.0 |
-| Payment | Xendit |
-| Email | gomail (SMTP) |
-| Container | Docker, Docker Compose |
+| Kategori  | Teknologi                         |
+| --------- | --------------------------------- |
+| Language  | Go 1.25+                          |
+| Framework | Gin                               |
+| Database  | Supabase (PostgreSQL)             |
+| ORM       | GORM                              |
+| Cache     | Redis                             |
+| Migration | golang-migrate                    |
+| Auth      | JWT, Magic Link, Google OAuth 2.0 |
+| Payment   | Xendit                            |
+| Email     | gomail (SMTP)                     |
+| Container | Docker, Docker Compose            |
 
 ---
 
@@ -284,13 +284,13 @@ docker-compose exec app ./invitation-app --seed
 
 Data yang di-seed:
 
-| Tipe | Data |
-|---|---|
-| Admin | admin@invitation.com / Admin@12345 |
-| Users | 3 user dummy (password: User@12345) |
-| Templates | 5 template (Free, Minimalist, Elegant Rose, Rustic Garden, Royal Gold) |
-| Invitations | 3 undangan contoh |
-| Messages | 5 ucapan contoh |
+| Tipe        | Data                                                                   |
+| ----------- | ---------------------------------------------------------------------- |
+| Admin       | admin@invitation.com / Admin@12345                                     |
+| Users       | 3 user dummy (password: User@12345)                                    |
+| Templates   | 5 template (Free, Minimalist, Elegant Rose, Rustic Garden, Royal Gold) |
+| Invitations | 3 undangan contoh                                                      |
+| Messages    | 5 ucapan contoh                                                        |
 
 ---
 
@@ -300,60 +300,60 @@ Base URL: `http://localhost:8080/api/v1`
 
 ### 🔓 Public Endpoints
 
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| GET | `/invitations/:slug` | Detail undangan by slug |
-| GET | `/invitations/:slug/messages` | List ucapan tamu |
-| POST | `/invitations/:slug/messages` | Kirim ucapan |
+| Method | Endpoint                      | Deskripsi               |
+| ------ | ----------------------------- | ----------------------- |
+| GET    | `/invitations/:slug`          | Detail undangan by slug |
+| GET    | `/invitations/:slug/messages` | List ucapan tamu        |
+| POST   | `/invitations/:slug/messages` | Kirim ucapan            |
 
 ### 🔐 Auth Endpoints
 
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| POST | `/auth/magic-link` | Request magic link |
-| GET | `/auth/verify` | Verify magic link → redirect |
-| GET | `/auth/verify-api` | Verify magic link → JSON |
-| GET | `/auth/google` | Login dengan Google |
-| GET | `/auth/google/callback` | Callback Google OAuth |
-| GET | `/auth/me` | Profile user (butuh token) |
-| POST | `/admin/auth/login` | Login admin |
-| POST | `/admin/auth/create` | Buat admin baru |
-| POST | `/admin/auth/change-password` | Ganti password admin |
+| Method | Endpoint                      | Deskripsi                    |
+| ------ | ----------------------------- | ---------------------------- |
+| POST   | `/auth/magic-link`            | Request magic link           |
+| GET    | `/auth/verify`                | Verify magic link → redirect |
+| GET    | `/auth/verify-api`            | Verify magic link → JSON     |
+| GET    | `/auth/google`                | Login dengan Google          |
+| GET    | `/auth/google/callback`       | Callback Google OAuth        |
+| GET    | `/auth/me`                    | Profile user (butuh token)   |
+| POST   | `/admin/auth/login`           | Login admin                  |
+| POST   | `/admin/auth/create`          | Buat admin baru              |
+| POST   | `/admin/auth/change-password` | Ganti password admin         |
 
 ### 👤 User Endpoints (butuh JWT)
 
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| GET | `/users/:id` | Detail user |
-| PUT | `/users/:id` | Update user |
-| POST | `/invitations` | Buat undangan |
-| PUT | `/invitations/:id` | Update undangan |
-| DELETE | `/invitations/:id` | Hapus undangan |
-| POST | `/orders` | Buat order template |
-| GET | `/orders` | List order saya |
-| GET | `/orders/:id` | Detail order |
-| POST | `/orders/:id/cancel` | Batalkan order |
-| GET | `/my-templates` | Template yang sudah dibeli |
+| Method | Endpoint             | Deskripsi                  |
+| ------ | -------------------- | -------------------------- |
+| GET    | `/users/:id`         | Detail user                |
+| PUT    | `/users/:id`         | Update user                |
+| POST   | `/invitations`       | Buat undangan              |
+| PUT    | `/invitations/:id`   | Update undangan            |
+| DELETE | `/invitations/:id`   | Hapus undangan             |
+| POST   | `/orders`            | Buat order template        |
+| GET    | `/orders`            | List order saya            |
+| GET    | `/orders/:id`        | Detail order               |
+| POST   | `/orders/:id/cancel` | Batalkan order             |
+| GET    | `/my-templates`      | Template yang sudah dibeli |
 
 ### 👑 Admin Endpoints (butuh JWT + role admin)
 
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| GET | `/admin/users` | List semua user |
-| DELETE | `/admin/users/:id` | Hapus user |
-| GET | `/admin/templates` | List semua template |
-| POST | `/admin/templates` | Buat template |
-| PUT | `/admin/templates/:id` | Update template |
-| DELETE | `/admin/templates/:id` | Hapus template |
-| GET | `/admin/invitations` | List semua undangan |
-| DELETE | `/admin/messages/:id` | Hapus ucapan |
-| GET | `/admin/orders` | List semua order |
+| Method | Endpoint               | Deskripsi           |
+| ------ | ---------------------- | ------------------- |
+| GET    | `/admin/users`         | List semua user     |
+| DELETE | `/admin/users/:id`     | Hapus user          |
+| GET    | `/admin/templates`     | List semua template |
+| POST   | `/admin/templates`     | Buat template       |
+| PUT    | `/admin/templates/:id` | Update template     |
+| DELETE | `/admin/templates/:id` | Hapus template      |
+| GET    | `/admin/invitations`   | List semua undangan |
+| DELETE | `/admin/messages/:id`  | Hapus ucapan        |
+| GET    | `/admin/orders`        | List semua order    |
 
 ### 🔔 Webhook
 
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| POST | `/webhook/xendit` | Callback pembayaran Xendit |
+| Method | Endpoint          | Deskripsi                  |
+| ------ | ----------------- | -------------------------- |
+| POST   | `/webhook/xendit` | Callback pembayaran Xendit |
 
 ---
 
@@ -417,6 +417,7 @@ curl -X POST http://localhost:8080/api/v1/admin/auth/login \
 ### Setup Xendit Webhook
 
 Di Xendit Dashboard → Settings → Webhooks:
+
 - URL: `https://yourdomain.com/webhook/xendit`
 - Events: `invoice.paid`, `invoice.expired`
 
@@ -527,12 +528,12 @@ docker-compose -f docker-compose.prod.yml up -d --no-deps app
 
 ## ⚡ Rate Limiting
 
-| Endpoint | Limit | Per |
-|---|---|---|
-| Semua endpoint | 300 req | 1 menit |
-| Auth (login/magic link) | 10 req | 1 menit |
-| API umum | 60 req | 1 menit |
-| Kirim ucapan | 20 req | 1 menit |
+| Endpoint                | Limit   | Per     |
+| ----------------------- | ------- | ------- |
+| Semua endpoint          | 300 req | 1 menit |
+| Auth (login/magic link) | 10 req  | 1 menit |
+| API umum                | 60 req  | 1 menit |
+| Kirim ucapan            | 20 req  | 1 menit |
 
 ---
 
@@ -609,4 +610,7 @@ MIT License — bebas digunakan dan dimodifikasi.
 ## 👤 Author
 
 Dibuat dengan ❤️ menggunakan Go + Supabase + Xendit
+
+```
+
 ```

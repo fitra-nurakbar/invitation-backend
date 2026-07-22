@@ -64,7 +64,6 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/invitations/me", handlers.GetMyInvitations)
 		protected.GET("/invitations/me/:id", handlers.GetMyInvitation)
 		protected.POST("/invitations", handlers.CreateInvitation)
-		protected.PUT("/invitations/me/:id", handlers.UpdateInvitation)
 		protected.DELETE("/invitations/me/:id", handlers.DeleteInvitation)
 
 		protected.POST("/orders", handlers.CreateOrder)

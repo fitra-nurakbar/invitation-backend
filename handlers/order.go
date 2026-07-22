@@ -75,17 +75,67 @@ func CreateOrder(c *gin.Context) {
 	// Buat order ID dulu
 	orderID := uuid.New()
 
+	// ─── FREE TEMPLATE — langsung grant akses tanpa Xendit ───
+    if template.Price == 0 {
+        // Buat order langsung PAID
+        now := time.Now()
+        order := models.Order{
+            ID:         orderID,
+            UserID:     userID,
+            TemplateID: templateID,
+            InvoiceID:  fmt.Sprintf("free-%s", orderID.String()),
+            InvoiceURL: "",
+            Amount:     0,
+            Status:     models.OrderStatusPaid,
+            ExpiresAt:  now.AddDate(10, 0, 0), // 10 tahun
+            PaidAt:     &now,
+        }
+
+        if err := config.DB.Create(&order).Error; err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat order"})
+            return
+        }
+
+        // Grant akses template langsung
+        userTemplate := models.UserTemplate{
+            ID:         uuid.New(),
+            UserID:     userID,
+            TemplateID: templateID,
+            OrderID:    orderID,
+        }
+        config.DB.Create(&userTemplate)
+
+        // Kirim email notifikasi (goroutine)
+        go func() {
+            emailSvc().SendPaymentSuccess(user.Email, services.PaymentSuccessData{
+                UserName:       user.Name,
+                TemplateName:   template.Name,
+                Amount:         0,
+                PaymentMethod:  "Free",
+                PaymentChannel: "Free Template",
+                InvoiceID:      order.InvoiceID,
+            })
+        }()
+
+        c.JSON(http.StatusCreated, gin.H{
+            "message":     "Template gratis berhasil diaktifkan!",
+            "data":        order,
+            "invoice_url": "", // kosong karena gratis
+        })
+        return
+    }
+
 	// Buat invoice di Xendit
-invoiceResult, err := xenditSvc().CreateInvoice(services.CreateInvoiceParams{
-    OrderID:  orderID,
-    User:     user,
-    Template: template,
-})
-if err != nil {
-    fmt.Println("❌ Xendit error:", err) // ← tambah ini
-    c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat invoice pembayaran", "detail": err.Error()})
-    return
-}
+	invoiceResult, err := xenditSvc().CreateInvoice(services.CreateInvoiceParams{
+		OrderID:  orderID,
+		User:     user,
+		Template: template,
+	})
+	if err != nil {
+		fmt.Println("❌ Xendit error:", err) // ← tambah ini
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat invoice pembayaran", "detail": err.Error()})
+		return
+	}
 
 	// Simpan order ke database
 	order := models.Order{

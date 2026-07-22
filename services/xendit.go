@@ -60,22 +60,22 @@ func (s *XenditService) CreateInvoice(params CreateInvoiceParams) (*InvoiceResul
 	s.client = xendit.NewClient(secretKey)
 
 	externalID := fmt.Sprintf("order-%s", params.OrderID.String())
-	expiresAt  := time.Now().Add(24 * time.Hour)
-	amount     := float64(params.Template.Price)
-	desc       := fmt.Sprintf("Pembelian Template %s - %s", params.Template.Name, params.User.Name)
-	duration   := "86400"
-	currency   := "IDR"
+	expiresAt := time.Now().Add(24 * time.Hour)
+	amount := float64(params.Template.Price)
+	desc := fmt.Sprintf("Pembelian Template %s - %s", params.Template.Name, params.User.Name)
+	duration := "86400"
+	currency := "IDR"
 	successURL := os.Getenv("XENDIT_SUCCESS_URL")
 	failureURL := os.Getenv("XENDIT_FAILURE_URL")
 
 	req := invoice.NewCreateInvoiceRequest(externalID, amount)
-	req.Description        = strPtr(desc)
-	req.PayerEmail         = strPtr(params.User.Email)
-	req.Currency           = strPtr(currency)
-	req.InvoiceDuration    = strPtr(duration)
+	req.Description = strPtr(desc)
+	req.PayerEmail = strPtr(params.User.Email)
+	req.Currency = strPtr(currency)
+	req.InvoiceDuration = strPtr(duration)
 	req.SuccessRedirectUrl = strPtr(successURL)
 	req.FailureRedirectUrl = strPtr(failureURL)
-	req.PaymentMethods     = []string{
+	req.PaymentMethods = []string{
 		"BCA", "BNI", "BRI", "MANDIRI", "PERMATA",
 		"QRIS",
 		"OVO", "DANA", "LINKAJA", "SHOPEEPAY",

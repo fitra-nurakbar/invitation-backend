@@ -41,30 +41,31 @@ func ResetDatabase(db *gorm.DB) error {
 }
 
 func Run(db *gorm.DB) {
-	fmt.Println("🌱 Menjalankan seeder...")
+	fmt.Println("[SEED] Menjalankan seeder...")
 
 	seedAdminUser(db) // ← admin dulu sebelum user biasa
 	seedTemplates(db)
 	seedUsers(db)
+	seedUserTemplates(db)
 	seedInvitations(db)
 	seedMessages(db)
 
-	fmt.Println("✅ Seeder selesai!")
+	fmt.Println("[SUCCESS] Seeder selesai!")
 }
 
 // ─── ADMIN USER ──────────────────────────────────────────────
 func seedAdminUser(db *gorm.DB) {
-	adminID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	adminID := uuid.MustParse("00000000-0000-0000-0001-000000000001")
 
 	var existing models.User
-	if db.Where("id = ?", adminID).First(&existing).Error == nil {
-		fmt.Println("  ⏭ Admin sudah ada, skip.")
+	if db.Where("email = ?", "bisniskeluargaofficial@gmail.com").First(&existing).Error == nil {
+		fmt.Println("  [SKIP] Admin sudah ada, skip.")
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("Admin@12345"), bcrypt.DefaultCost)
 	if err != nil {
-		log.Fatal("❌ Gagal hash password admin:", err)
+		log.Fatal("[ERROR] Gagal hash password admin:", err)
 	}
 
 	pwd := string(hashedPassword) // ← buat variable dulu
@@ -78,11 +79,11 @@ func seedAdminUser(db *gorm.DB) {
 	}
 
 	if err := db.Create(&admin).Error; err != nil {
-		log.Println("❌ Error seed admin:", err)
+		log.Println("[ERROR] Error seed admin:", err)
 		return
 	}
 
-	fmt.Println("  ✔ Admin user dibuat")
+	fmt.Println("  [OK] Admin user dibuat")
 	fmt.Println("     Email    :", admin.Email)
 	fmt.Println("     Password : Admin@12345")
 }
@@ -140,9 +141,9 @@ func seedTemplates(db *gorm.DB) {
 	for _, t := range templates {
 		result := db.Where("id = ?", t.ID).FirstOrCreate(&t)
 		if result.Error != nil {
-			log.Println("❌ Error seed template:", result.Error)
+			log.Println("[ERROR] Error seed template:", result.Error)
 		} else {
-			fmt.Println("  ✔ Template:", t.Name)
+			fmt.Println("  [OK] Template:", t.Name)
 		}
 	}
 }
@@ -176,9 +177,9 @@ func seedUsers(db *gorm.DB) {
 	for _, u := range users {
 		result := db.Where("id = ?", u.ID).FirstOrCreate(&u)
 		if result.Error != nil {
-			log.Println("❌ Error seed user:", result.Error)
+			log.Println("[ERROR] Error seed user:", result.Error)
 		} else {
-			fmt.Println("  ✔ User:", u.Name)
+			fmt.Println("  [OK] User:", u.Name)
 		}
 	}
 
@@ -371,15 +372,15 @@ func seedInvitations(db *gorm.DB) {
 		if db.Where("id = ?", inv.ID).First(&existing).Error == nil {
 			// Update detail dengan struktur baru
 			db.Model(&existing).Update("detail", inv.Detail)
-			fmt.Println("  🔄 Updated invitation:", inv.Slug)
+			fmt.Println("  [UPDATE] Updated invitation:", inv.Slug)
 			continue
 		}
 
 		result := db.Create(&inv)
 		if result.Error != nil {
-			log.Println("❌ Error seed invitation:", result.Error)
+			log.Println("[ERROR] Error seed invitation:", result.Error)
 		} else {
-			fmt.Println("  ✔ Invitation:", inv.Slug)
+			fmt.Println("  [OK] Invitation:", inv.Slug)
 		}
 	}
 }
@@ -427,9 +428,69 @@ func seedMessages(db *gorm.DB) {
 	for _, m := range messages {
 		result := db.Create(&m)
 		if result.Error != nil {
-			log.Println("❌ Error seed message:", result.Error)
+			log.Println("[ERROR] Error seed message:", result.Error)
 		} else {
-			fmt.Println("  ✔ Message dari:", m.Name)
+			fmt.Println("  [OK] Message dari:", m.Name)
 		}
 	}
+}
+
+// ─── USER TEMPLATES ──────────────────────────────────────────
+func seedUserTemplates(db *gorm.DB) {
+	budiID := uuid.MustParse("00000000-0000-0000-0001-000000000002")
+	sitiID := uuid.MustParse("00000000-0000-0000-0001-000000000003")
+	ahmadID := uuid.MustParse("00000000-0000-0000-0001-000000000004")
+	adminID := uuid.MustParse("00000000-0000-0000-0001-000000000001")
+
+	tmpl1 := uuid.MustParse("00000000-0000-0000-0000-000000000001") // Elegant Rose
+	tmpl2 := uuid.MustParse("00000000-0000-0000-0000-000000000002") // Modern Minimalist
+	tmpl3 := uuid.MustParse("00000000-0000-0000-0000-000000000003") // Rustic Garden
+	tmpl5 := uuid.MustParse("00000000-0000-0000-0000-000000000005") // Simple Free
+
+	pairs := []struct {
+		UserID     uuid.UUID
+		TemplateID uuid.UUID
+	}{
+		{budiID, tmpl1},
+		{budiID, tmpl5},
+		{sitiID, tmpl2},
+		{sitiID, tmpl5},
+		{ahmadID, tmpl3},
+		{ahmadID, tmpl5},
+		{adminID, tmpl1},
+		{adminID, tmpl2},
+		{adminID, tmpl5},
+	}
+
+	now := time.Now()
+	for _, p := range pairs {
+		orderID := uuid.New()
+		order := models.Order{
+			ID:         orderID,
+			UserID:     p.UserID,
+			TemplateID: p.TemplateID,
+			InvoiceID:  fmt.Sprintf("inv-%s", orderID.String()[:8]),
+			InvoiceURL: "",
+			Amount:     0,
+			Status:     models.OrderStatusPaid,
+			ExpiresAt:  now.AddDate(5, 0, 0),
+			PaidAt:     &now,
+		}
+		if err := db.Create(&order).Error; err != nil {
+			log.Println("[ERROR] Error seed order:", err)
+			continue
+		}
+
+		ut := models.UserTemplate{
+			ID:         uuid.New(),
+			UserID:     p.UserID,
+			TemplateID: p.TemplateID,
+			OrderID:    orderID,
+			GrantedAt:  now,
+		}
+		if err := db.Create(&ut).Error; err != nil {
+			log.Println("[ERROR] Error seed user template:", err)
+		}
+	}
+	fmt.Println("  [OK] Orders & User templates seeded successfully")
 }

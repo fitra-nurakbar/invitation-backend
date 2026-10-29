@@ -34,9 +34,9 @@ func NewXenditService() *XenditService {
 
 	// Validasi key tidak kosong
 	if secretKey == "" {
-		fmt.Println("⚠️  XENDIT_SECRET_KEY tidak ditemukan di environment!")
+		fmt.Println("[WARN]  XENDIT_SECRET_KEY tidak ditemukan di environment!")
 	} else {
-		fmt.Printf("✅ Xendit key loaded: %s...\n", secretKey[:12]) // tampilkan 12 karakter pertama saja
+		fmt.Printf("[SUCCESS] Xendit key loaded: %s...\n", secretKey[:12]) // tampilkan 12 karakter pertama saja
 	}
 
 	client := xendit.NewClient(secretKey)

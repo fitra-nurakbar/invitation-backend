@@ -61,30 +61,34 @@ func (s *EmailService) SendPaymentSuccess(to string, data PaymentSuccessData) er
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .header { background: #4F46E5; padding: 32px; text-align: center; }
-    .header h1 { color: #fff; margin: 0; font-size: 24px; }
-    .body { padding: 32px; }
-    .body p { color: #555; line-height: 1.6; }
-    .detail-box { background: #F9FAFB; border-radius: 8px; padding: 20px; margin: 24px 0; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #E5E7EB; }
-    .detail-row:last-child { border-bottom: none; font-weight: bold; }
-    .detail-label { color: #6B7280; }
-    .detail-value { color: #111827; }
-    .badge { display: inline-block; background: #D1FAE5; color: #065F46; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: bold; }
-    .footer { background: #F9FAFB; padding: 20px; text-align: center; }
-    .footer p { color: #9CA3AF; font-size: 12px; margin: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #faf9f6; margin: 0; padding: 0; color: #181716; }
+    .container { max-width: 540px; margin: 40px auto; background: #ffffff; border: 1px solid #e4dfd5; padding: 40px 32px; box-sizing: border-box; }
+    .header { text-align: center; border-bottom: 1px solid #e4dfd5; padding-bottom: 24px; margin-bottom: 28px; }
+    .brand { font-family: Georgia, serif; font-size: 20px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #181716; }
+    .title { font-size: 18px; font-weight: 600; color: #181716; margin: 0 0 12px; }
+    .content p { font-size: 14px; line-height: 1.6; color: #55514b; margin: 0 0 16px; }
+    .detail-box { background: #faf9f6; border: 1px solid #e4dfd5; padding: 20px 24px; margin: 24px 0; }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e4dfd5; font-size: 13.5px; }
+    .detail-row:last-child { border-bottom: none; padding-top: 14px; margin-top: 4px; }
+    .detail-label { color: #6b665f; }
+    .detail-value { color: #181716; font-weight: 500; }
+    .detail-value-mono { font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #181716; }
+    .detail-total { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: #181716; }
+    .badge { display: inline-block; background: #f3f7f4; border: 1px solid #c2d9c8; color: #275235; padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    .btn-wrapper { text-align: center; margin: 28px 0; }
+    .btn { display: inline-block; background: #8a704c; color: #ffffff !important; padding: 12px 28px; text-decoration: none; border: 1px solid #8a704c; font-size: 13.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .footer { border-top: 1px solid #e4dfd5; padding-top: 20px; margin-top: 32px; font-size: 12px; color: #8c877e; text-align: center; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>✅ Pembayaran Berhasil!</h1>
+      <div class="brand">INVITATION</div>
     </div>
-    <div class="body">
+    <div class="content">
+      <h2 class="title">Pembayaran Berhasil</h2>
       <p>Halo <strong>{{.UserName}}</strong>,</p>
-      <p>Pembayaran kamu telah kami terima. Template undangan kamu sudah aktif dan siap digunakan!</p>
+      <p>Pembayaran Anda telah kami terima. Akses template undangan Anda kini telah aktif dan siap digunakan untuk membuat undangan digital.</p>
 
       <div class="detail-box">
         <div class="detail-row">
@@ -92,40 +96,45 @@ func (s *EmailService) SendPaymentSuccess(to string, data PaymentSuccessData) er
           <span class="detail-value">{{.TemplateName}}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Metode Bayar</span>
+          <span class="detail-label">Metode Pembayaran</span>
           <span class="detail-value">{{.PaymentMethod}} - {{.PaymentChannel}}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Invoice ID</span>
-          <span class="detail-value">{{.InvoiceID}}</span>
+          <span class="detail-label">Nomor Invoice</span>
+          <span class="detail-value-mono">{{.InvoiceID}}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Status</span>
+          <span class="detail-label">Status Transaksi</span>
           <span class="detail-value"><span class="badge">LUNAS</span></span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Total Bayar</span>
-          <span class="detail-value">Rp {{.AmountFormatted}}</span>
+          <span class="detail-label">Total Pembayaran</span>
+          <span class="detail-total">Rp {{.AmountFormatted}}</span>
         </div>
       </div>
 
-      <p>Silakan login ke dashboard untuk mulai membuat undangan digitalmu. 🎉</p>
+      <div class="btn-wrapper">
+        <a href="http://localhost:3000/dashboard" class="btn">Buka Dashboard</a>
+      </div>
+
+      <p style="font-size: 13px; color: #8c877e; margin-top: 20px;">
+        Silakan masuk ke dashboard akun Anda untuk mulai mengonfigurasi detail dan membagikan undangan Anda.
+      </p>
     </div>
     <div class="footer">
-      <p>Email ini dikirim otomatis, mohon tidak membalas.</p>
+      <p>Pesan ini dikirimkan secara otomatis oleh Invitation App.</p>
     </div>
   </div>
 </body>
 </html>`
 
-	// Tambah field format rupiah
 	type templateData struct {
 		PaymentSuccessData
 		AmountFormatted string
 	}
 
 	formatted := formatRupiah(data.Amount)
-	t, err := template.New("email").Parse(tmpl)
+	t, err := template.New("email-payment").Parse(tmpl)
 	if err != nil {
 		return fmt.Errorf("gagal parse template email: %w", err)
 	}
@@ -138,7 +147,7 @@ func (s *EmailService) SendPaymentSuccess(to string, data PaymentSuccessData) er
 		return fmt.Errorf("gagal render template email: %w", err)
 	}
 
-	return s.send(to, "✅ Pembayaran Berhasil - "+data.TemplateName, buf.String())
+	return s.send(to, "Pembayaran Berhasil - "+data.TemplateName, buf.String())
 }
 
 // formatRupiah — format angka ke format Rupiah
@@ -154,70 +163,65 @@ func formatRupiah(amount int) string {
 	return result
 }
 
-// SendMagicLink — kirim email magic link
-func (s *EmailService) SendMagicLink(to, name, magicURL string) error {
+// SendOTP — kirim email kode OTP verifikasi
+func (s *EmailService) SendOTP(to, name, otpCode string) error {
 	tmpl := `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .header { background: #4F46E5; padding: 32px; text-align: center; }
-    .header h1 { color: #fff; margin: 0; font-size: 24px; }
-    .body { padding: 32px; }
-    .body p { color: #555; line-height: 1.6; }
-    .btn { display: block; width: fit-content; margin: 24px auto; background: #4F46E5; color: #fff !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; }
-    .note { background: #FEF3C7; border-radius: 8px; padding: 16px; margin-top: 24px; }
-    .note p { color: #92400E; margin: 0; font-size: 14px; }
-    .footer { background: #F9FAFB; padding: 20px; text-align: center; }
-    .footer p { color: #9CA3AF; font-size: 12px; margin: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #faf9f6; margin: 0; padding: 0; color: #181716; }
+    .container { max-width: 540px; margin: 40px auto; background: #ffffff; border: 1px solid #e4dfd5; padding: 40px 32px; box-sizing: border-box; }
+    .header { text-align: center; border-bottom: 1px solid #e4dfd5; padding-bottom: 24px; margin-bottom: 28px; }
+    .brand { font-family: Georgia, serif; font-size: 20px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #181716; }
+    .title { font-size: 18px; font-weight: 600; color: #181716; margin: 0 0 12px; }
+    .content p { font-size: 14px; line-height: 1.6; color: #55514b; margin: 0 0 16px; }
+    .otp-box { text-align: center; margin: 32px 0; padding: 20px; background: #faf9f6; border: 1px solid #e4dfd5; }
+    .otp-code { font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #181716; }
+    .otp-note { font-size: 12px; color: #8a704c; margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .footer { border-top: 1px solid #e4dfd5; padding-top: 20px; margin-top: 32px; font-size: 12px; color: #8c877e; text-align: center; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>🔐 Login ke Invitation App</h1>
+      <div class="brand">INVITATION</div>
     </div>
-    <div class="body">
+    <div class="content">
+      <h2 class="title">Kode Verifikasi Masuk</h2>
       <p>Halo <strong>{{.Name}}</strong>,</p>
-      <p>Kamu meminta link untuk masuk ke akun Invitation App. Klik tombol di bawah untuk login:</p>
-
-      <a href="{{.MagicURL}}" class="btn">Login Sekarang</a>
-
-      <div class="note">
-        <p>⏰ Link ini hanya berlaku selama <strong>15 menit</strong> dan hanya bisa digunakan <strong>sekali</strong>.</p>
+      <p>Gunakan kode verifikasi berikut untuk masuk ke akun Anda. Kode ini berlaku selama 10 menit dan hanya dapat digunakan satu kali.</p>
+      <div class="otp-box">
+        <div class="otp-code">{{.OTPCode}}</div>
+        <div class="otp-note">Berlaku selama 10 menit</div>
       </div>
-
-      <p style="margin-top:24px; color:#9CA3AF; font-size:13px;">
-        Jika kamu tidak meminta link ini, abaikan email ini. Akun kamu tetap aman.
-      </p>
+      <p>Jangan berikan kode ini kepada siapapun demi keamanan akun Anda. Jika Anda tidak merasa meminta kode ini, silakan abaikan email ini.</p>
     </div>
     <div class="footer">
-      <p>Email ini dikirim otomatis, mohon tidak membalas.</p>
+      <p>Pesan ini dikirimkan secara otomatis oleh Invitation App.</p>
     </div>
   </div>
 </body>
 </html>`
 
 	type templateData struct {
-		Name     string
-		MagicURL string
+		Name    string
+		OTPCode string
 	}
 
-	t, err := template.New("magic-link").Parse(tmpl)
+	t, err := template.New("otp-login").Parse(tmpl)
 	if err != nil {
-		return fmt.Errorf("gagal parse template magic link: %w", err)
+		return fmt.Errorf("gagal parse template OTP: %w", err)
 	}
 
 	var buf bytes.Buffer
 	if err := t.Execute(&buf, templateData{
-		Name:     name,
-		MagicURL: magicURL,
+		Name:    name,
+		OTPCode: otpCode,
 	}); err != nil {
-		return fmt.Errorf("gagal render template magic link: %w", err)
+		return fmt.Errorf("gagal render template OTP: %w", err)
 	}
 
-	return s.send(to, "🔐 Link Login Invitation App", buf.String())
+	return s.send(to, "Kode Verifikasi Masuk Invitation App", buf.String())
 }

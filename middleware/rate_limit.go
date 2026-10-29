@@ -32,14 +32,14 @@ func newStore() limiter.Store {
 		)
 		if err != nil {
 			// Fallback ke memory jika Redis gagal
-			fmt.Println("⚠️  Redis store gagal, fallback ke memory store:", err)
+			fmt.Println("[WARN]  Redis store gagal, fallback ke memory store:", err)
 			return memory.NewStore()
 		}
 		return store
 	}
 
 	// Redis tidak tersedia → pakai memory
-	fmt.Println("⚠️  Redis tidak tersedia, pakai memory store")
+	fmt.Println("[WARN]  Redis tidak tersedia, pakai memory store")
 	return memory.NewStore()
 }
 
@@ -80,7 +80,7 @@ func rateLimitHandler(name string, period time.Duration, limit int64, message st
 		ctx, err := l.Get(c.Request.Context(), key)
 		if err != nil {
 			// Jika Redis error, jangan block request — log saja
-			fmt.Println("⚠️  Rate limiter error:", err)
+			fmt.Println("[WARN]  Rate limiter error:", err)
 			c.Next()
 			return
 		}

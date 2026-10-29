@@ -18,9 +18,10 @@ const (
 // ─── Detail Structs ───────────────────────────────────────────
 
 type BrideGroom struct {
-	Name          string `json:"name"`
-	PlaceOfBirth  string `json:"place_of_birth"`
-	Parent        string `json:"parent"`
+	Name         string `json:"name"`
+	PlaceOfBirth string `json:"place_of_birth"`
+	Parent       string `json:"parent"`
+	Photo        string `json:"photo"`
 }
 
 type Quotes struct {
@@ -38,12 +39,14 @@ type WeddingEvent struct {
 }
 
 type WeddingGift struct {
-	Platform string `json:"platform"`
-	Name     string `json:"name"`
-	ID       string `json:"id"`
+	Platform  string `json:"platform"`
+	Name      string `json:"name"`
+	ID        string `json:"id"`
+	QRISImage string `json:"qris_image,omitempty"`
 }
 
 type InvitationDetailInput struct {
+	CoverImage        string                 `json:"cover_image,omitempty"`
 	Bride             BrideGroom             `json:"bride"`
 	Groom             BrideGroom             `json:"groom"`
 	Quotes            Quotes                 `json:"quotes"`
@@ -52,6 +55,7 @@ type InvitationDetailInput struct {
 	Gallery           map[string]interface{} `json:"gallery"`
 	LoveStory         map[string]interface{} `json:"love_story"`
 	WeddingGift       []WeddingGift          `json:"wedding_gift"`
+	Music             string                 `json:"music"`
 }
 
 // ─── Model ────────────────────────────────────────────────────

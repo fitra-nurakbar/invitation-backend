@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"invitation-app/config"
 	"invitation-app/models"
 	"net/http"
@@ -81,6 +82,22 @@ func GetInvitationBySlug(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": invitation})
 }
 
+func parseEventDate(raw string) (time.Time, error) {
+	if t, err := time.Parse("2006-01-02", raw); err == nil {
+		return t, nil
+	}
+	if t, err := time.Parse(time.RFC3339, raw); err == nil {
+		return t, nil
+	}
+	if t, err := time.Parse("2006-01-02T15:04:05Z", raw); err == nil {
+		return t, nil
+	}
+	if t, err := time.Parse("2006-01-02T15:04", raw); err == nil {
+		return t, nil
+	}
+	return time.Time{}, errors.New("format event_date tidak valid, gunakan YYYY-MM-DD")
+}
+
 // POST /invitations
 func CreateInvitation(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
@@ -103,7 +120,7 @@ func CreateInvitation(c *gin.Context) {
 		return
 	}
 
-	eventDate, err := time.Parse("2006-01-02", input.EventDate)
+	eventDate, err := parseEventDate(input.EventDate)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "format event_date tidak valid, gunakan YYYY-MM-DD"})
 		return
@@ -201,4 +218,102 @@ func DeleteInvitation(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Undangan berhasil dihapus"})
+}
+
+// DELETE /admin/invitations/:id
+func AdminDeleteInvitation(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
+		return
+	}
+
+	// Hapus messages terkait
+	config.DB.Where("invitation_id = ?", id).Delete(&models.Message{})
+
+	// Hapus invitation
+	result := config.DB.Where("id = ?", id).Delete(&models.Invitation{})
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Undangan berhasil dihapus oleh admin"})
+}
+
+// PUT /invitations/me/:id
+func UpdateInvitation(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
+		return
+	}
+
+	var invitation models.Invitation
+	if err := config.DB.Where("id = ? AND user_id = ?", id, userID).First(&invitation).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
+		return
+	}
+
+	var input struct {
+		Slug      *string                       `json:"slug"`
+		EventDate *string                       `json:"event_date"`
+		Status    *models.InvitationStatus      `json:"status"`
+		Detail    *models.InvitationDetailInput `json:"detail"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if input.Slug != nil && *input.Slug != "" && *input.Slug != invitation.Slug {
+		var existing models.Invitation
+		if result := config.DB.Where("slug = ? AND id != ?", *input.Slug, id).First(&existing); result.Error == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Slug sudah digunakan, pilih slug lain"})
+			return
+		}
+		invitation.Slug = *input.Slug
+	}
+
+	if input.EventDate != nil && *input.EventDate != "" {
+		eventDate, err := parseEventDate(*input.EventDate)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "format event_date tidak valid, gunakan YYYY-MM-DD"})
+			return
+		}
+		invitation.EventDate = eventDate
+
+		// Update expires_at based on template
+		var template models.Template
+		if err := config.DB.First(&template, "id = ?", invitation.TemplateID).Error; err == nil {
+			invitation.ExpiresAt = eventDate.AddDate(0, 0, template.ActiveDaysAfter)
+		}
+	}
+
+	if input.Status != nil && *input.Status != "" {
+		invitation.Status = *input.Status
+	}
+
+	if input.Detail != nil {
+		detailJSON, err := json.Marshal(input.Detail)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses detail undangan"})
+			return
+		}
+		invitation.Detail = datatypes.JSON(detailJSON)
+	}
+
+	if err := config.DB.Save(&invitation).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate undangan"})
+		return
+	}
+
+	config.DB.Preload("Template").First(&invitation, "id = ?", invitation.ID)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Undangan berhasil diperbarui",
+		"data":    invitation,
+	})
 }

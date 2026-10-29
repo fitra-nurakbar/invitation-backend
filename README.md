@@ -306,16 +306,16 @@ Base URL: `http://localhost:8080/api/v1`
 | GET    | `/invitations/:slug/messages` | List ucapan tamu        |
 | POST   | `/invitations/:slug/messages` | Kirim ucapan            |
 
-### 🔐 Auth Endpoints
+### Auth Endpoints
 
 | Method | Endpoint                      | Deskripsi                    |
 | ------ | ----------------------------- | ---------------------------- |
-| POST   | `/auth/magic-link`            | Request magic link           |
-| GET    | `/auth/verify`                | Verify magic link → redirect |
-| GET    | `/auth/verify-api`            | Verify magic link → JSON     |
+| POST   | `/auth/otp/send`              | Kirim kode OTP ke email      |
+| POST   | `/auth/otp/verify`            | Verifikasi kode OTP → JWT    |
 | GET    | `/auth/google`                | Login dengan Google          |
 | GET    | `/auth/google/callback`       | Callback Google OAuth        |
 | GET    | `/auth/me`                    | Profile user (butuh token)   |
+| PUT    | `/auth/me`                    | Update profil (nama/avatar)  |
 | POST   | `/admin/auth/login`           | Login admin                  |
 | POST   | `/admin/auth/create`          | Buat admin baru              |
 | POST   | `/admin/auth/change-password` | Ganti password admin         |
@@ -357,21 +357,24 @@ Base URL: `http://localhost:8080/api/v1`
 
 ---
 
-## 🔐 Autentikasi
+## Autentikasi
 
-### User — Magic Link
+### User — OTP (One-Time Password)
 
 ```bash
-# 1. Request magic link
-curl -X POST http://localhost:8080/api/v1/auth/magic-link \
+# 1. Kirim kode OTP ke email
+curl -X POST http://localhost:8080/api/v1/auth/otp/send \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@gmail.com","name":"Nama User"}'
+  -d '{"email":"user@gmail.com"}'
 
-# 2. Cek email → klik link → dapat JWT
+# 2. Verifikasi kode OTP 6-digit → dapat JWT
+curl -X POST http://localhost:8080/api/v1/auth/otp/verify \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@gmail.com","otp":"123456"}'
 
-# 3. Gunakan JWT
+# 3. Gunakan JWT untuk akses endpoint terproteksi
 curl http://localhost:8080/api/v1/auth/me \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "Authorization: Bearer ***"
 ```
 
 ### User — Google OAuth
@@ -531,7 +534,7 @@ docker-compose -f docker-compose.prod.yml up -d --no-deps app
 | Endpoint                | Limit   | Per     |
 | ----------------------- | ------- | ------- |
 | Semua endpoint          | 300 req | 1 menit |
-| Auth (login/magic link) | 10 req  | 1 menit |
+| Auth (login/OTP)        | 10 req  | 1 menit |
 | API umum                | 60 req  | 1 menit |
 | Kirim ucapan            | 20 req  | 1 menit |
 

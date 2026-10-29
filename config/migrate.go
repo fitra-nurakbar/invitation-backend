@@ -16,23 +16,23 @@ func RunMigrations() {
 	databaseURL := os.Getenv("DATABASE_URL")
 
 	migrationsURL := getMigrationsURL()
-	fmt.Println("📁 Migrations path:", migrationsURL)
+	fmt.Println("[MIGRATE] Migrations path:", migrationsURL)
 
 	m, err := migrate.New(migrationsURL, databaseURL)
 	if err != nil {
-		log.Fatal("❌ Gagal inisialisasi migrate:", err)
+		log.Fatal("[ERROR] Gagal inisialisasi migrate:", err)
 	}
 	defer m.Close()
 
 	if err := m.Up(); err != nil {
 		if err == migrate.ErrNoChange {
-			fmt.Println("✅ Migration tidak ada perubahan.")
+			fmt.Println("[SUCCESS] Migration tidak ada perubahan.")
 			return
 		}
-		log.Fatal("❌ Gagal menjalankan migration:", err)
+		log.Fatal("[ERROR] Gagal menjalankan migration:", err)
 	}
 
-	fmt.Println("✅ Migration selesai!")
+	fmt.Println("[SUCCESS] Migration selesai!")
 }
 
 func getMigrationsURL() string {

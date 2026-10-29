@@ -5,6 +5,7 @@ import (
 	"invitation-app/models"
 	"invitation-app/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -126,6 +127,57 @@ func Me(c *gin.Context) {
 			"id":         user.ID,
 			"email":      user.Email,
 			"name":       user.Name,
+			"avatar":     user.Avatar,
+			"role":       user.Role,
+			"created_at": user.CreatedAt,
+		},
+	})
+}
+
+// PUT /auth/me — update profil pengguna saat ini
+func UpdateMe(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	var user models.User
+	if result := config.DB.First(&user, "id = ?", userID); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User tidak ditemukan"})
+		return
+	}
+
+	var input struct {
+		Name   *string `json:"name"`
+		Avatar *string `json:"avatar"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updates := map[string]interface{}{}
+	if input.Name != nil && strings.TrimSpace(*input.Name) != "" {
+		updates["name"] = strings.TrimSpace(*input.Name)
+	}
+	if input.Avatar != nil {
+		updates["avatar"] = strings.TrimSpace(*input.Avatar)
+	}
+
+	if len(updates) > 0 {
+		if err := config.DB.Model(&user).Updates(updates).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui profil"})
+			return
+		}
+	}
+
+	// Reload updated user
+	config.DB.First(&user, "id = ?", userID)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profil berhasil diperbarui",
+		"data": gin.H{
+			"id":         user.ID,
+			"email":      user.Email,
+			"name":       user.Name,
+			"avatar":     user.Avatar,
 			"role":       user.Role,
 			"created_at": user.CreatedAt,
 		},

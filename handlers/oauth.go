@@ -9,6 +9,7 @@ import (
 	"invitation-app/utils"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -96,9 +97,9 @@ func GoogleCallback(c *gin.Context) {
 	}
 
 	if isNew {
-		fmt.Printf("✅ User baru via Google: %s\n", user.Email)
+		fmt.Printf("[SUCCESS] User baru via Google: %s\n", user.Email)
 	} else {
-		fmt.Printf("✅ User login via Google: %s\n", user.Email)
+		fmt.Printf("[SUCCESS] User login via Google: %s\n", user.Email)
 	}
 
 	// Generate JWT
@@ -109,8 +110,14 @@ func GoogleCallback(c *gin.Context) {
 	}
 
 	// Redirect ke frontend dengan JWT
-	frontendURL := os.Getenv("MAGIC_LINK_BASE_URL")
-	redirectURL := fmt.Sprintf("%s/auth/callback?token=%s", frontendURL, jwtToken)
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = os.Getenv("MAGIC_LINK_BASE_URL")
+	}
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+	redirectURL := fmt.Sprintf("%s/auth/callback?token=%s", strings.TrimRight(frontendURL, "/"), jwtToken)
 
 	c.Redirect(http.StatusTemporaryRedirect, redirectURL)
 }
@@ -209,7 +216,7 @@ func findOrCreateGoogleUser(googleUser *GoogleUserInfo) (*models.User, bool, err
 		return &user, false, nil
 	}
 
-	// 2. Cari by email (user sudah ada via magic link)
+	// 2. Cari by email (user sudah ada sebelumnya)
 	result = config.DB.Where("email = ?", googleUser.Email).First(&user)
 	if result.Error == nil {
 		// Link google_id ke akun yang sudah ada

@@ -12,6 +12,7 @@ type Message struct {
 	InvitationID uuid.UUID `gorm:"type:uuid;not null" json:"invitation_id"`
 	Name         string    `gorm:"type:text" json:"name"`
 	Message      string    `gorm:"type:text" json:"message"`
+	Attendance   string    `gorm:"type:text;default:'hadir'" json:"attendance"`
 	IPAddress    string    `gorm:"type:inet" json:"ip_address"`
 	CreatedAt    time.Time `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 

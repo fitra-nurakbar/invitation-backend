@@ -132,7 +132,7 @@ func CreateOrder(c *gin.Context) {
 		Template: template,
 	})
 	if err != nil {
-		fmt.Println("❌ Xendit error:", err) // ← tambah ini
+		fmt.Println("[ERROR] Xendit error:", err) // ← tambah ini
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat invoice pembayaran", "detail": err.Error()})
 		return
 	}

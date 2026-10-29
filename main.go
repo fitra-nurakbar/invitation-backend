@@ -14,7 +14,7 @@ import (
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		fmt.Println("⚠️  .env tidak ditemukan, menggunakan environment variables sistem")
+		fmt.Println("[WARN]  .env tidak ditemukan, menggunakan environment variables sistem")
 	}
 
 	requiredEnvs := []string{
@@ -26,14 +26,14 @@ func main() {
 	for _, env := range requiredEnvs {
 		val := os.Getenv(env)
 		if val == "" {
-			log.Fatalf("❌ Environment variable %s tidak ditemukan!", env)
+			log.Fatalf("[ERROR] Environment variable %s tidak ditemukan!", env)
 		}
 		// Tampilkan 12 karakter pertama saja
 		preview := val
 		if len(val) > 12 {
 			preview = val[:12]
 		}
-		fmt.Printf("✅ %s = %s...\n", env, preview)
+		fmt.Printf("[SUCCESS] %s = %s...\n", env, preview)
 	}
 
 	appEnv := os.Getenv("APP_ENV")
@@ -52,7 +52,7 @@ func main() {
 		}
 		fmt.Println("Reset database selesai")
 		seeders.Run(config.DB)
-		fmt.Println("🎉 Seeding selesai.")
+		fmt.Println("[SUCCESS] Seeding selesai.")
 		return
 	}
 
@@ -64,6 +64,6 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Printf("🚀 Server berjalan di http://localhost:%s\n", port)
+	fmt.Printf("[START] Server berjalan di http://localhost:%s\n", port)
 	r.Run(":" + port)
 }

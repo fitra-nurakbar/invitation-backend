@@ -69,7 +69,7 @@ func XenditWebhook(c *gin.Context) {
 			"payment_channel": payload.PaymentChannel,
 			"updated_at":      time.Now(),
 		}).Error; err != nil {
-			fmt.Println("❌ Gagal update order:", err)
+			fmt.Println("[ERROR] Gagal update order:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal update order"})
 			return
 		}
@@ -80,10 +80,10 @@ func XenditWebhook(c *gin.Context) {
 			order.TemplateID,
 			order.ID,
 		); err != nil {
-			fmt.Println("❌ Gagal grant akses template:", err)
+			fmt.Println("[ERROR] Gagal grant akses template:", err)
 			// Tidak return — tetap kirim email
 		} else {
-			fmt.Printf("✅ Akses template %s diberikan ke user %s\n",
+			fmt.Printf("[SUCCESS] Akses template %s diberikan ke user %s\n",
 				order.Template.Name, order.User.Name)
 		}
 
@@ -98,9 +98,9 @@ func XenditWebhook(c *gin.Context) {
 				InvoiceID:      payload.ID,
 			})
 			if err != nil {
-				fmt.Println("❌ Gagal kirim email:", err)
+				fmt.Println("[ERROR] Gagal kirim email:", err)
 			} else {
-				fmt.Printf("✅ Email notifikasi terkirim ke %s\n", order.User.Email)
+				fmt.Printf("[SUCCESS] Email notifikasi terkirim ke %s\n", order.User.Email)
 			}
 		}()
 
@@ -109,7 +109,7 @@ func XenditWebhook(c *gin.Context) {
 			"status":     models.OrderStatusExpired,
 			"updated_at": time.Now(),
 		})
-		fmt.Printf("⏰ Order %s expired\n", order.ID)
+		fmt.Printf("[EXPIRED] Order %s expired\n", order.ID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Webhook diproses"})

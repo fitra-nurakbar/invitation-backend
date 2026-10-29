@@ -11,6 +11,9 @@ func SetupRoutes(r *gin.Engine) {
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.GlobalRateLimit())
 
+	// Static route untuk file unggahan
+	r.Static("/uploads", "./uploads")
+
 	api := r.Group("/api/v1")
 
 	// ─── PUBLIC ──────────────────────────────────────────────
@@ -19,10 +22,9 @@ func SetupRoutes(r *gin.Engine) {
 	userAuth := api.Group("/auth")
 	userAuth.Use(middleware.AuthRateLimit())
 	{
-		// Magic Link
-		userAuth.POST("/magic-link", handlers.RequestMagicLink)
-		userAuth.GET("/verify", handlers.VerifyMagicLink)
-		userAuth.GET("/verify-api", handlers.VerifyMagicLinkAPI)
+		// OTP Verification
+		userAuth.POST("/otp/send", handlers.SendOTP)
+		userAuth.POST("/otp/verify", handlers.VerifyOTP)
 
 		// Google OAuth
 		userAuth.GET("/google", handlers.GoogleLogin)
@@ -58,19 +60,26 @@ func SetupRoutes(r *gin.Engine) {
 	protected.Use(middleware.AuthRequired(), middleware.APIRateLimit())
 	{
 		protected.GET("/auth/me", handlers.Me)
+		protected.PUT("/auth/me", handlers.UpdateMe)
 
 		protected.GET("/users/:id", handlers.GetUser)
 		protected.PUT("/users/:id", handlers.UpdateUser)
 		protected.GET("/invitations/me", handlers.GetMyInvitations)
 		protected.GET("/invitations/me/:id", handlers.GetMyInvitation)
+		protected.GET("/invitations/me/:id/messages", handlers.GetMyInvitationMessages)
 		protected.POST("/invitations", handlers.CreateInvitation)
+		protected.PUT("/invitations/me/:id", handlers.UpdateInvitation)
 		protected.DELETE("/invitations/me/:id", handlers.DeleteInvitation)
+		protected.DELETE("/invitations/me/:id/messages/:msg_id", handlers.DeleteMyInvitationMessage)
 
 		protected.POST("/orders", handlers.CreateOrder)
 		protected.GET("/orders", handlers.GetOrders)
 		protected.GET("/orders/:id", handlers.GetOrder)
 		protected.POST("/orders/:id/cancel", handlers.CancelOrder)
 		protected.GET("/templates/me", handlers.GetMyTemplates)
+
+		// Upload media (foto, audio, QRIS)
+		protected.POST("/upload", handlers.UploadFile)
 	}
 
 	// ─── ADMIN ONLY ───────────────────────────────────────────
@@ -94,6 +103,7 @@ func SetupRoutes(r *gin.Engine) {
 
 		// Invitations
 		admin.GET("/invitations", handlers.GetInvitations)
+		admin.DELETE("/invitations/:id", handlers.AdminDeleteInvitation)
 
 		// Messages
 		admin.GET("/messages", handlers.GetAllMessages)

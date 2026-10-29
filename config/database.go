@@ -29,8 +29,9 @@ func ConnectDatabase() {
 		},
 	)
 
-	// Tambah prefer_simple_protocol untuk fix error prepared statement di Supabase
-	dsn = dsn + "?prefer_simple_protocol=true"
+	// Catatan: PreferSimpleProtocol sudah diaktifkan di postgres.Config di bawah.
+	// Jangan tambahkan "?prefer_simple_protocol=true" ke DSN string karena PostgreSQL lokal
+	// akan menganggapnya parameter konfigurasi server dan melempar error SQLSTATE 42704.
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,
@@ -51,6 +52,6 @@ func ConnectDatabase() {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	fmt.Println("✅ Koneksi ke Supabase berhasil!")
+	fmt.Println("[SUCCESS] Koneksi ke database berhasil!")
 	DB = db
 }

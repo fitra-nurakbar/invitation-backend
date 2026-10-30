@@ -62,8 +62,6 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/auth/me", handlers.Me)
 		protected.PUT("/auth/me", handlers.UpdateMe)
 
-		protected.GET("/users/:id", handlers.GetUser)
-		protected.PUT("/users/:id", handlers.UpdateUser)
 		protected.GET("/invitations/me", handlers.GetMyInvitations)
 		protected.GET("/invitations/me/:id", handlers.GetMyInvitation)
 		protected.GET("/invitations/me/:id/messages", handlers.GetMyInvitationMessages)

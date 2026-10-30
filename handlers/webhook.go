@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"invitation-app/config"
 	"invitation-app/models"
@@ -24,9 +25,10 @@ type XenditWebhookPayload struct {
 
 // POST /webhook/xendit
 func XenditWebhook(c *gin.Context) {
-	// Verifikasi token webhook dari header
+	// Verifikasi token webhook secara fail-closed dan constant-time
 	token := c.GetHeader("x-callback-token")
-	if token != os.Getenv("XENDIT_WEBHOOK_TOKEN") {
+	expectedToken := os.Getenv("XENDIT_WEBHOOK_TOKEN")
+	if expectedToken == "" || token == "" || subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token tidak valid"})
 		return
 	}

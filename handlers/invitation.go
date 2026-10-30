@@ -78,8 +78,26 @@ func GetInvitationBySlug(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
 		return
 	}
+	view, ok := publicInvitationView(invitation)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Undangan tidak ditemukan"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"data": invitation})
+	c.JSON(http.StatusOK, gin.H{"data": view})
+}
+
+// publicInvitationView hanya mengizinkan undangan aktif dan menghapus field khusus editor.
+func publicInvitationView(invitation models.Invitation) (models.Invitation, bool) {
+	if invitation.Status != models.StatusActive {
+		return models.Invitation{}, false
+	}
+	if len(invitation.PublishedLayout) > 0 && string(invitation.PublishedLayout) != "{}" {
+		invitation.Layout = invitation.PublishedLayout
+	}
+	invitation.DraftLayout = nil
+	invitation.PublishedLayout = nil
+	return invitation, true
 }
 
 func parseEventDate(raw string) (time.Time, error) {
@@ -103,10 +121,11 @@ func CreateInvitation(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
 	var input struct {
-		TemplateID string                     `json:"template_id" binding:"required"`
-		Slug       string                     `json:"slug" binding:"required"`
-		EventDate  string                     `json:"event_date" binding:"required"`
+		TemplateID string                       `json:"template_id" binding:"required"`
+		Slug       string                       `json:"slug" binding:"required"`
+		EventDate  string                       `json:"event_date" binding:"required"`
 		Detail     models.InvitationDetailInput `json:"detail"`
+		Layout     *models.InvitationLayout     `json:"layout"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -165,22 +184,46 @@ func CreateInvitation(c *gin.Context) {
 
 	expiresAt := eventDate.AddDate(0, 0, template.ActiveDaysAfter)
 
+	layout := models.DefaultInvitationLayout()
+	if input.Layout != nil {
+		layout = *input.Layout
+	}
+	var blockConfig models.BlockConfig
+	if err := json.Unmarshal(template.BlockConfig, &blockConfig); err != nil {
+		blockConfig = models.DefaultStandardBlockConfig()
+	}
+	if err := models.ValidateInvitationLayout(&layout, blockConfig.AllowedBlocks); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "layout tidak valid: " + err.Error()})
+		return
+	}
+
 	// Convert detail ke JSON
+
 	detailJSON, err := json.Marshal(input.Detail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses detail undangan"})
 		return
 	}
 
+	layoutJSON, err := json.Marshal(layout)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses layout undangan"})
+		return
+	}
+
 	invitation := models.Invitation{
-		ID:         uuid.New(),
-		UserID:     userID,
-		TemplateID: templateID,
-		Slug:       input.Slug,
-		EventDate:  eventDate,
-		Status:     models.StatusDraft,
-		ExpiresAt:  expiresAt,
-		Detail:     datatypes.JSON(detailJSON),
+		ID:              uuid.New(),
+		UserID:          userID,
+		TemplateID:      templateID,
+		Slug:            input.Slug,
+		EventDate:       eventDate,
+		Status:          models.StatusDraft,
+		ExpiresAt:       expiresAt,
+		Detail:          datatypes.JSON(detailJSON),
+		Layout:          datatypes.JSON(layoutJSON),
+		DraftLayout:     datatypes.JSON(layoutJSON),
+		PublishedLayout: datatypes.JSON([]byte(`{}`)),
+		LayoutVer:       layout.Version,
 	}
 
 	if err := config.DB.Create(&invitation).Error; err != nil {
@@ -258,14 +301,20 @@ func UpdateInvitation(c *gin.Context) {
 	}
 
 	var input struct {
-		Slug      *string                       `json:"slug"`
-		EventDate *string                       `json:"event_date"`
-		Status    *models.InvitationStatus      `json:"status"`
-		Detail    *models.InvitationDetailInput `json:"detail"`
+		Slug                  *string                       `json:"slug"`
+		EventDate             *string                       `json:"event_date"`
+		Status                *models.InvitationStatus      `json:"status"`
+		Detail                *models.InvitationDetailInput `json:"detail"`
+		Layout                *models.InvitationLayout      `json:"layout"`
+		ExpectedLayoutVersion *int                          `json:"expected_layout_version"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if input.ExpectedLayoutVersion != nil && *input.ExpectedLayoutVersion != invitation.LayoutVer {
+		c.JSON(http.StatusConflict, gin.H{"error": "layout revision conflict", "layout_version": invitation.LayoutVer})
 		return
 	}
 
@@ -306,10 +355,54 @@ func UpdateInvitation(c *gin.Context) {
 		invitation.Detail = datatypes.JSON(detailJSON)
 	}
 
+	if input.Layout != nil {
+		var template models.Template
+		if err := config.DB.First(&template, "id = ?", invitation.TemplateID).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Template tidak ditemukan"})
+			return
+		}
+		var blockConfig models.BlockConfig
+		if err := json.Unmarshal(template.BlockConfig, &blockConfig); err != nil {
+			blockConfig = models.DefaultStandardBlockConfig()
+		}
+		if err := models.ValidateInvitationLayout(input.Layout, blockConfig.AllowedBlocks); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "layout tidak valid: " + err.Error()})
+			return
+		}
+		layoutJSON, err := json.Marshal(input.Layout)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses layout undangan"})
+			return
+		}
+		invitation.DraftLayout = datatypes.JSON(layoutJSON)
+		invitation.PublishedLayout = datatypes.JSON(layoutJSON)
+		invitation.Layout = datatypes.JSON(layoutJSON)
+		invitation.LayoutVer = input.Layout.Version
+	}
+
+	if input.Status != nil && *input.Status == models.StatusActive {
+		publishedLayout := invitation.DraftLayout
+		if len(publishedLayout) == 0 || string(publishedLayout) == "{}" {
+			publishedLayout = invitation.Layout
+		}
+		invitation.PublishedLayout = publishedLayout
+		invitation.Layout = publishedLayout
+		now := time.Now()
+		invitation.PublishedAt = &now
+	}
+
 	if err := config.DB.Save(&invitation).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate undangan"})
 		return
 	}
+
+	action := "invitation.update"
+	if input.Status != nil && *input.Status == models.StatusActive {
+		action = "invitation.publish"
+	}
+	invitationID := invitation.ID
+	userIDRef := userID
+	_ = config.DB.Create(&models.CMSAuditLog{InvitationID: &invitationID, UserID: &userIDRef, Action: action, Metadata: datatypes.JSON([]byte(`{}`))}).Error
 
 	config.DB.Preload("Template").First(&invitation, "id = ?", invitation.ID)
 	c.JSON(http.StatusOK, gin.H{
